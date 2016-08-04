@@ -21,11 +21,13 @@ namespace SourceCopyrightEnforcer
             }
         }
 
-        private void ScanDirectory( DirectoryInfo dirInfo )
+        private static void ScanDirectory( DirectoryInfo dirInfo )
         {
             if (dirInfo.Name == "obj"
                 || dirInfo.Name == "bin"
                 || dirInfo.Name == "packages"
+                || dirInfo.Name == "generated"
+                || dirInfo.Name == "_generated"
                 || dirInfo.Name.StartsWith( "." ))
                 return;
 
@@ -33,13 +35,15 @@ namespace SourceCopyrightEnforcer
             {
                 foreach (var file in dirInfo.EnumerateFiles())
                 {
-                    if (file.Extension == ".cs")
-                    {
-                        Console.WriteLine( file.FullName );
-                        var fu = new CSharpFileFixer( file );
-                        if (fu.NeedsFix)
-                            fu.Fix();
-                    }
+                    if (file.Extension != ".cs"
+                        || file.FullName.EndsWith( ".designer.cs" )
+                        || file.Length < 16)
+                        continue;
+
+                    Console.WriteLine( file.FullName );
+                    var fu = new CSharpFileFixer( file );
+                    if (fu.NeedsFix)
+                        fu.Fix();
                 }
 
                 foreach (var dir in dirInfo.EnumerateDirectories())
